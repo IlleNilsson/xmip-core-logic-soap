@@ -134,12 +134,6 @@ fn read_fault(fault: roxmltree::Node<'_, '_>, version: Version) -> Fault {
     }
 }
 
-fn escape(text: &str) -> String {
-    text.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-}
-
 fn envelope(version: Version, inner: &str) -> String {
     format!(
         "<soap:Envelope xmlns:soap=\"{}\"><soap:Body>{inner}</soap:Body></soap:Envelope>",
@@ -151,14 +145,14 @@ fn fault_xml(version: Version, fault: &Fault) -> String {
     match version {
         Version::V11 => format!(
             "<soap:Fault><faultcode>{}</faultcode><faultstring>{}</faultstring></soap:Fault>",
-            escape(&fault.code),
-            escape(&fault.message)
+            codec::xml::escape(&fault.code),
+            codec::xml::escape(&fault.message)
         ),
         Version::V12 => format!(
             "<soap:Fault><soap:Code><soap:Value>{}</soap:Value></soap:Code>\
              <soap:Reason><soap:Text xml:lang=\"en\">{}</soap:Text></soap:Reason></soap:Fault>",
-            escape(&fault.code),
-            escape(&fault.message)
+            codec::xml::escape(&fault.code),
+            codec::xml::escape(&fault.message)
         ),
     }
 }
