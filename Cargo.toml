@@ -18,7 +18,7 @@ path = "src/lib.rs"
 # (repository-model.md). The Logic trait and its shapes live there.
 logic = { package = "xmip-core-logic", git = "https://github.com/IlleNilsson/xmip-core-logic", branch = "main" }
 # XML character data, escaped as every writer in the estate escapes it.
-codec = { package = "xmip-core-codec", git = "https://github.com/IlleNilsson/xmip-core-codec", branch = "main" }
+codec = { package = "xmip-core-library-codec", git = "https://github.com/IlleNilsson/xmip-core-library-codec", branch = "main" }
 stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
 contract = { package = "xmip-core-contract", git = "https://github.com/IlleNilsson/xmip-core-contract", branch = "main" }
 
