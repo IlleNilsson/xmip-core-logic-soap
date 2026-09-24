@@ -12,10 +12,10 @@
 //! is the operation element's namespace and the arguments are typed by the
 //! `xml-schema` contract, which every SOAP body satisfies structurally.
 
+use contract::ContractId;
 use logic::{
     Arrival, Fault, Header, Invocation, Logic, LogicError, OperationName, Outcome, Reply, Request,
 };
-use sdk::contract::ContractId;
 use stream::Stream;
 
 const NS_11: &str = "http://schemas.xmlsoap.org/soap/envelope/";
