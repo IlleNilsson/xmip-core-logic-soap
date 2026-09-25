@@ -218,6 +218,7 @@ impl Logic for Soap {
             Outcome::Fault(fault) => ("500", fault_xml(version, fault)),
         };
         Ok(Reply {
+            trailers: Vec::new(),
             headers: vec![
                 Header::new(":status", status),
                 Header::new("Content-Type", version.media_type()),
@@ -370,6 +371,7 @@ mod tests {
         assert_eq!(request.target, "/orders");
         assert!(request.headers.iter().any(|h| h.name == "SOAPAction"));
         let answered = Reply {
+            trailers: Vec::new(),
             headers: vec![],
             body: stream(&envelope(
                 Version::V11,
@@ -381,6 +383,7 @@ mod tests {
             Outcome::Fault(fault) => panic!("unexpected fault {fault:?}"),
         }
         let refused = Reply {
+            trailers: Vec::new(),
             headers: vec![],
             body: stream(&envelope(
                 Version::V11,
