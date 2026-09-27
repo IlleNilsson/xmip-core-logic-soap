@@ -158,7 +158,8 @@ fn fault_xml(version: Version, fault: &Fault) -> String {
 }
 
 fn text_of(stream: &Stream) -> Result<&str, LogicError> {
-    std::str::from_utf8(stream.bytes())
+    stream
+        .text()
         .map_err(|error| LogicError::new(format!("not UTF-8: {error}")))
 }
 
