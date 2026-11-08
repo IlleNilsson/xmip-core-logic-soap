@@ -160,7 +160,7 @@ fn fault_xml(version: Version, fault: &Fault) -> String {
 fn text_of(stream: &Stream) -> Result<&str, LogicError> {
     stream
         .text()
-        .map_err(|error| LogicError::new(format!("not UTF-8: {error}")))
+        .map_err(|refused| LogicError::new(refused.to_string()))
 }
 
 fn version_parameter(parameters: &[Header]) -> Option<Version> {
@@ -307,7 +307,8 @@ mod tests {
             invocation.operation,
             OperationName::new("urn:example:orders", "PlaceOrder")
         );
-        let arguments = std::str::from_utf8(invocation.arguments.bytes()).expect("xml");
+        let arguments =
+            std::str::from_utf8(invocation.arguments.load().expect("held")).expect("xml");
         assert!(arguments.starts_with("<o:PlaceOrder") && arguments.ends_with("</o:PlaceOrder>"));
         assert!(
             invocation
@@ -334,7 +335,7 @@ mod tests {
                 &Outcome::Result(stream("<o:Placed xmlns:o=\"urn:example:orders\"/>")),
             )
             .expect("reply");
-        let text = std::str::from_utf8(result.body.bytes()).expect("xml");
+        let text = std::str::from_utf8(result.body.load().expect("held")).expect("xml");
         assert!(text.contains(NS_12) && text.contains("<o:Placed"), "{text}");
         let fault = soap
             .reply(
@@ -345,7 +346,7 @@ mod tests {
                 }),
             )
             .expect("reply");
-        let text = std::str::from_utf8(fault.body.bytes()).expect("xml");
+        let text = std::str::from_utf8(fault.body.load().expect("held")).expect("xml");
         assert!(
             text.contains("<soap:Reason>") && text.contains("no stock"),
             "{text}"
@@ -380,7 +381,9 @@ mod tests {
             )),
         };
         match soap.outcome(&invocation, &answered).expect("outcome") {
-            Outcome::Result(result) => assert!(result.bytes().starts_with(b"<o:Placed")),
+            Outcome::Result(result) => {
+                assert!(result.load().expect("held").starts_with(b"<o:Placed"));
+            }
             Outcome::Fault(fault) => panic!("unexpected fault {fault:?}"),
         }
         let refused = Reply {
