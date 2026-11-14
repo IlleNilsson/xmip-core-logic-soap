@@ -12,6 +12,7 @@
 //! is the operation element's namespace and the arguments are typed by the
 //! `xml-schema` contract, which every SOAP body satisfies structurally.
 
+use codec::xml::tree::{Document, Node};
 use contract::ContractId;
 use logic::{
     Arrival, Fault, Header, Invocation, Logic, LogicError, OperationName, Outcome, Reply, Request,
@@ -82,45 +83,41 @@ struct Body<'a> {
 }
 
 fn read_body(text: &str) -> Result<Body<'_>, LogicError> {
-    let document = roxmltree::Document::parse(text)
+    let document = Document::parse(text)
         .map_err(|error| LogicError::new(format!("not well-formed XML: {error}")))?;
     let envelope = document.root_element();
     let version = envelope
-        .tag_name()
         .namespace()
         .and_then(Version::of)
-        .filter(|_| envelope.tag_name().name() == "Envelope")
+        .filter(|_| envelope.local() == "Envelope")
         .ok_or_else(|| LogicError::new("the root is not a SOAP Envelope"))?;
     let body = envelope
-        .children()
-        .find(|n| n.is_element() && n.tag_name().name() == "Body")
+        .elements()
+        .find(|n| n.local() == "Body")
         .ok_or_else(|| LogicError::new("the Envelope has no Body"))?;
     let operation = body
-        .children()
-        .find(roxmltree::Node::is_element)
+        .elements()
+        .next()
         .ok_or_else(|| LogicError::new("the Body is empty"))?;
-    let fault = (operation.tag_name().name() == "Fault"
-        && operation.tag_name().namespace() == Some(version.namespace()))
-    .then(|| read_fault(operation, version));
+    let fault = operation
+        .is(Some(version.namespace()), "Fault")
+        .then(|| read_fault(operation, version));
     Ok(Body {
-        name: operation.tag_name().name().to_string(),
-        namespace: operation.tag_name().namespace().unwrap_or("").to_string(),
+        name: operation.local().to_string(),
+        namespace: operation.namespace().unwrap_or("").to_string(),
         xml: &text[operation.range()],
         version,
         fault,
     })
 }
 
-fn read_fault(fault: roxmltree::Node<'_, '_>, version: Version) -> Fault {
+fn read_fault(fault: Node<'_>, version: Version) -> Fault {
     let text_of = |path: &[&str]| -> String {
         let mut node = Some(fault);
         for step in path {
-            node = node.and_then(|n| {
-                n.children()
-                    .find(|c| c.is_element() && c.tag_name().name() == *step)
-            });
+            node = node.and_then(|n| n.elements().find(|c| c.local() == *step));
         }
-        node.and_then(|n| n.text()).unwrap_or("").trim().to_string()
+        node.and_then(Node::text).unwrap_or("").trim().to_string()
     };
     match version {
         Version::V11 => Fault {
