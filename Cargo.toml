@@ -17,14 +17,12 @@ path = "src/lib.rs"
 # A Technology depends on its parent Capability, never the reverse
 # (repository-model.md). The Logic trait and its shapes live there.
 logic = { package = "xmip-core-logic", git = "https://github.com/IlleNilsson/xmip-core-logic", branch = "main" }
-# XML character data, escaped as every writer in the estate escapes it.
+# An Envelope read by the estate's one XML reader (`codec::xml::tree`), and XML
+# character data escaped as every writer in the estate escapes it. Writing an
+# Envelope is string assembly: it has four elements.
 codec = { package = "xmip-core-library-codec", git = "https://github.com/IlleNilsson/xmip-core-library-codec", branch = "main" }
 stream = { package = "xmip-core-stream", git = "https://github.com/IlleNilsson/xmip-core-stream", branch = "main" }
 contract = { package = "xmip-core-contract", git = "https://github.com/IlleNilsson/xmip-core-contract", branch = "main" }
-
-# Reading an Envelope, the same parser the xml-schema contract reads with.
-# Writing one is string assembly: an Envelope has four elements.
-roxmltree = "0.21"
 
 [dev-dependencies]
 xcore = { package = "xmip-core", git = "https://github.com/IlleNilsson/xmip-core", branch = "main" }
